@@ -160,6 +160,10 @@ function tokenize(source, alternateCommentMode) {
      * @inner
      */
     function setComment(start, end, isLeading) {
+        // 上个comment还有，就不需要重新设置了(chaneyzhao)
+        if(commentText) {
+            return ;
+        }
         commentType = source.charAt(start++);
         commentLine = line;
         commentLineEmpty = false;
@@ -247,7 +251,12 @@ function tokenize(source, alternateCommentMode) {
                 if (charAt(offset) === "/") { // Line
                     if (!alternateCommentMode) {
                         // check for triple-slash comment
-                        isDoc = charAt(start = offset + 1) === "/";
+                        // isDoc = charAt(start = offset + 1) === "/";
+
+                        // chaneyzhao 修改
+                        start = offset
+                        // check for triple-slash comment
+                        isDoc = true;
 
                         while (charAt(++offset) !== "\n") {
                             if (offset === length) {
@@ -284,8 +293,12 @@ function tokenize(source, alternateCommentMode) {
                     }
                 } else if ((curr = charAt(offset)) === "*") { /* Block */
                     // check for /** (regular comment mode) or /* (alternate comment mode)
-                    start = offset + 1;
-                    isDoc = alternateCommentMode || charAt(start) === "*";
+                    // start = offset + 1;
+                    // isDoc = alternateCommentMode || charAt(start) === "*";
+
+                    // chaneyzhao 修改
+                    start = offset;
+                    isDoc = true;
                     do {
                         if (curr === "\n") {
                             ++line;
@@ -378,14 +391,21 @@ function tokenize(source, alternateCommentMode) {
             if (commentLine === line - 1 && (alternateCommentMode || commentType === "*" || commentLineEmpty)) {
                 ret = commentIsLeading ? commentText : null;
             }
+
+            // chaneyzhao修改
+            commentText = null;
         } else {
             /* istanbul ignore else */
             if (commentLine < trailingLine) {
                 peek();
             }
+            // 如果是同一行，证明是属于他的（chaneyzhao修改）
             if (commentLine === trailingLine && !commentLineEmpty && (alternateCommentMode || commentType === "/")) {
                 ret = commentIsLeading ? null : commentText;
             }
+
+            // chaneyzhao修改
+            commentText = null;
         }
         return ret;
     }
